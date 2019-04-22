@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <math.h>
 #include <x86intrin.h>
+#include <dirent.h>
 
 #include "cglm/cglm.h"
 
@@ -236,6 +237,8 @@ main(int argc, char *argv[])
   }
   AssetTable assetTable = {};
   assetTable.storageMemory = &mem;
+
+  ListDirectory("./resources", (char*)(mem.transientMemory));
 
   LoadAsset("./resources/cube.obj", &assetTable, ASSET_MODEL3D_OBJ);
   Model3D modelOBJ = {};
