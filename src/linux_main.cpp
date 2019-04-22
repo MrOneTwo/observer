@@ -352,39 +352,6 @@ main(int argc, char *argv[])
                                     + importer->memory.transient.offset
                                     + importer->memory.strings.offset;
 
-  printf("Used %u (%u/%u/%u) bytes of memory.\n",
-         memory_used_for_import,
-         importer->memory.permanent.offset,
-         importer->memory.transient.offset,
-         importer->memory.strings.offset);
-
-  printf("Version is %u.\n",
-         importer->fbx->version);
-
-  printf("Created at %4u/%02u/%02u %02u:%02u:%02u:%04u.\n",
-         importer->fbx->timestamp.year,
-         importer->fbx->timestamp.month,
-         importer->fbx->timestamp.day,
-         importer->fbx->timestamp.hour,
-         importer->fbx->timestamp.minute,
-         importer->fbx->timestamp.second,
-         importer->fbx->timestamp.millisecond);
-
-  printf("Authored with %s (%s) by %s.\n",
-         importer->fbx->tool.name,
-         importer->fbx->tool.version,
-         importer->fbx->tool.vendor);
-
-  printf("Exported by \"%s\".\n",
-         importer->fbx->exporter.name);
-
-  printf("Up = <%1.0f, %1.0f, %1.0f>\n"
-         "Forward = <%1.0f, %1.0f, %1.0f>\n"
-         "Right = <%1.0f, %1.0f, %1.0f>\n",
-         importer->fbx->basis.up.x, importer->fbx->basis.up.y, importer->fbx->basis.up.z,
-         importer->fbx->basis.forward.x, importer->fbx->basis.forward.y, importer->fbx->basis.forward.z,
-         importer->fbx->basis.right.x, importer->fbx->basis.right.y, importer->fbx->basis.right.z);
-
   const fbx_scene_t *scene = &importer->fbx->scene;
 
   fbx_uint32_t num_of_empties = 0;
@@ -708,7 +675,7 @@ main(int argc, char *argv[])
                      NK_WINDOW_CLOSABLE |
                      NK_WINDOW_MINIMIZABLE |
                      NK_WINDOW_TITLE;
-      if (nk_begin(nkCtx, "Michal tries OpenGL", nk_rect(10, 10, 400, 200), window_flags))
+      if (nk_begin(nkCtx, "FBX Analyzer", nk_rect(10, 10, 500, 500), window_flags))
       {
         nk_layout_row_dynamic(nkCtx, 20, 2);
         nk_label(nkCtx, "FPS (ms per frame)", NK_TEXT_LEFT);
@@ -727,6 +694,42 @@ main(int argc, char *argv[])
         nk_labelf(nkCtx, NK_TEXT_RIGHT,
                   "(%.3f, %.3f, %.3f)",
                   camera.pitch, camera.roll, camera.yaw);
+        nk_label(nkCtx, "FBX file", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "%s", fbx_path);
+        nk_label(nkCtx, "FBX version", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "%u", importer->fbx->version);
+        nk_label(nkCtx, "Created at", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT,
+                  "%4u/%02u/%02u %02u:%02u:%02u:%04u",
+                  importer->fbx->timestamp.year,
+                  importer->fbx->timestamp.month,
+                  importer->fbx->timestamp.day,
+                  importer->fbx->timestamp.hour,
+                  importer->fbx->timestamp.minute,
+                  importer->fbx->timestamp.second,
+                  importer->fbx->timestamp.millisecond);
+        nk_label(nkCtx, "Created with", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "%s (%s) by %s",
+                  importer->fbx->tool.name,
+                  importer->fbx->tool.version,
+                  importer->fbx->tool.vendor);
+        nk_label(nkCtx, "Used bytes for import", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "%u B", memory_used_for_import);
+        nk_label(nkCtx, "Up", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "<%1.0f, %1.0f, %1.0f>",
+                  importer->fbx->basis.up.x,
+                  importer->fbx->basis.up.y,
+                  importer->fbx->basis.up.z);
+        nk_label(nkCtx, "Forward", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "<%1.0f, %1.0f, %1.0f>",
+                  importer->fbx->basis.forward.x,
+                  importer->fbx->basis.forward.y,
+                  importer->fbx->basis.forward.z);
+        nk_label(nkCtx, "Right", NK_TEXT_LEFT);
+        nk_labelf(nkCtx, NK_TEXT_RIGHT, "<%1.0f, %1.0f, %1.0f>",
+                  importer->fbx->basis.right.x,
+                  importer->fbx->basis.right.y,
+                  importer->fbx->basis.right.z);
       }
       nk_end(nkCtx);
 
