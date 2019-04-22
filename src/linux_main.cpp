@@ -116,8 +116,6 @@ SignalHandler(int signal)
 
 global_variable GLAtom glAtom = {};
 
-//#include "test_plane.cpp"
-
 void
 SetGeoForRendering(GLAtom* glAtom, Model3D* model)
 {
@@ -453,7 +451,6 @@ main(int argc, char *argv[])
     projection);
 
 
-  //SetTestPlaneForRendering();
   SetGeoForRendering(&glAtom, &modelOBJ);
   GLuint vertexShader;
   GLuint fragmentShader;
