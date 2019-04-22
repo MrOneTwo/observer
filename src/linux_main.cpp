@@ -224,108 +224,6 @@ main(int argc, char *argv[])
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
 
-  ////////////////////////////////////////
-  // 
-  // FBX
-  // 
-
-  fbx_import_options_t options;
-
-  options.permanent_memory_pool = 1048575;
-  options.transient_memory_pool = 1048575;
-  options.strings_memory_pool = 1048575;
-
-  static const char* fbx_path = "./resources/monkey.fbx";
-  fbx_importer_t *importer = fbx_importer_setup(&options);
-
-  importer->stream = fbx_stream_open_from_path(fbx_path, "r");
-
-  if (!importer->stream) {
-    fprintf(stderr, "Cannot open \"%s\"!\n", fbx_path);
-    return EXIT_FAILURE;
-  }
-
-  /*
-
-  printf("Loading \"%s\"...\n", path);
-
-  if (fbx_importer_run(importer) != FBX_OK)
-    return fprintf(stderr, "Failed.\n"), EXIT_FAILURE;
-  else
-    printf("Ok.\n");
-
-  fbx_stream_close(importer->stream);
-
-  fbx_size_t memory_used_for_import = importer->memory.permanent.offset
-                                    + importer->memory.transient.offset
-                                    + importer->memory.strings.offset;
-
-  printf("Used %u (%u/%u/%u) bytes of memory.\n",
-         memory_used_for_import,
-         importer->memory.permanent.offset,
-         importer->memory.transient.offset,
-         importer->memory.strings.offset);
-
-  printf("Version is %u.\n",
-         importer->fbx->version);
-
-  printf("Created at %4u/%02u/%02u %02u:%02u:%02u:%04u.\n",
-         importer->fbx->timestamp.year,
-         importer->fbx->timestamp.month,
-         importer->fbx->timestamp.day,
-         importer->fbx->timestamp.hour,
-         importer->fbx->timestamp.minute,
-         importer->fbx->timestamp.second,
-         importer->fbx->timestamp.millisecond);
-
-  printf("Authored with %s (%s) by %s.\n",
-         importer->fbx->tool.name,
-         importer->fbx->tool.version,
-         importer->fbx->tool.vendor);
-
-  printf("Exported by \"%s\".\n",
-         importer->fbx->exporter.name);
-
-  printf("Up = <%1.0f, %1.0f, %1.0f>\n"
-         "Forward = <%1.0f, %1.0f, %1.0f>\n"
-         "Right = <%1.0f, %1.0f, %1.0f>\n",
-         importer->fbx->basis.up.x, importer->fbx->basis.up.y, importer->fbx->basis.up.z,
-         importer->fbx->basis.forward.x, importer->fbx->basis.forward.y, importer->fbx->basis.forward.z,
-         importer->fbx->basis.right.x, importer->fbx->basis.right.y, importer->fbx->basis.right.z);
-
-  const fbx_scene_t *scene = &importer->fbx->scene;
-
-  fbx_uint32_t num_of_empties = 0;
-  fbx_uint32_t num_of_models = 0;
-  fbx_uint32_t num_of_meshes = 0;
-
-  for (fbx_uint32_t object = 0; object < scene->num_of_objects; ++object) {
-    switch (scene->objects[object]->type) {
-      case FBX_EMPTY: num_of_empties += 1; break;
-      case FBX_MODEL: num_of_models += 1; break;
-      case FBX_MESH: num_of_meshes += 1; break;
-    }
-  }
-
-  printf("Scene is composed of %u objects.\n"
-         " There are %u empties.\n"
-         " There are %u models.\n"
-         " There are %u meshes.\n",
-         importer->fbx->scene.num_of_objects,
-         num_of_empties,
-         num_of_models,
-         num_of_meshes);
-
-  printf("Hierarchy:\n");
-
-  walk_and_print(scene->root);
-  */
-
-  // 
-  // FBX
-  // 
-  ////////////////////////////////////////
-
   Memory mem = {};
   if (!mem.isInitialized)
   {
@@ -418,6 +316,109 @@ main(int argc, char *argv[])
   nk_font_atlas *atlas;
   nk_sdl_font_stash_begin(&atlas);
   nk_sdl_font_stash_end();
+
+  ////////////////////////////////////////
+  // 
+  // FBX
+  // 
+
+  fbx_import_options_t options;
+
+  options.permanent_memory_pool = 1048575;
+  options.transient_memory_pool = 1048575;
+  options.strings_memory_pool = 1048575;
+
+  static const char* fbx_path = "./resources/monkey.fbx";
+  fbx_importer_t *importer = fbx_importer_setup(&options);
+
+  importer->stream = fbx_stream_open_from_path(fbx_path, "r");
+
+  if (!importer->stream) {
+    fprintf(stderr, "Cannot open \"%s\"!\n", fbx_path);
+    return EXIT_FAILURE;
+  }
+
+  printf("Loading \"%s\"... ", fbx_path);
+
+  if (fbx_importer_run(importer) != FBX_OK)
+    return fprintf(stderr, "Failed.\n"), EXIT_FAILURE;
+  else
+    printf("OK\n");
+
+  fbx_stream_close(importer->stream);
+
+  fbx_size_t memory_used_for_import = importer->memory.permanent.offset
+                                    + importer->memory.transient.offset
+                                    + importer->memory.strings.offset;
+
+  printf("Used %u (%u/%u/%u) bytes of memory.\n",
+         memory_used_for_import,
+         importer->memory.permanent.offset,
+         importer->memory.transient.offset,
+         importer->memory.strings.offset);
+
+  printf("Version is %u.\n",
+         importer->fbx->version);
+
+  printf("Created at %4u/%02u/%02u %02u:%02u:%02u:%04u.\n",
+         importer->fbx->timestamp.year,
+         importer->fbx->timestamp.month,
+         importer->fbx->timestamp.day,
+         importer->fbx->timestamp.hour,
+         importer->fbx->timestamp.minute,
+         importer->fbx->timestamp.second,
+         importer->fbx->timestamp.millisecond);
+
+  printf("Authored with %s (%s) by %s.\n",
+         importer->fbx->tool.name,
+         importer->fbx->tool.version,
+         importer->fbx->tool.vendor);
+
+  printf("Exported by \"%s\".\n",
+         importer->fbx->exporter.name);
+
+  /*
+
+  printf("Up = <%1.0f, %1.0f, %1.0f>\n"
+         "Forward = <%1.0f, %1.0f, %1.0f>\n"
+         "Right = <%1.0f, %1.0f, %1.0f>\n",
+         importer->fbx->basis.up.x, importer->fbx->basis.up.y, importer->fbx->basis.up.z,
+         importer->fbx->basis.forward.x, importer->fbx->basis.forward.y, importer->fbx->basis.forward.z,
+         importer->fbx->basis.right.x, importer->fbx->basis.right.y, importer->fbx->basis.right.z);
+
+  const fbx_scene_t *scene = &importer->fbx->scene;
+
+  fbx_uint32_t num_of_empties = 0;
+  fbx_uint32_t num_of_models = 0;
+  fbx_uint32_t num_of_meshes = 0;
+
+  for (fbx_uint32_t object = 0; object < scene->num_of_objects; ++object) {
+    switch (scene->objects[object]->type) {
+      case FBX_EMPTY: num_of_empties += 1; break;
+      case FBX_MODEL: num_of_models += 1; break;
+      case FBX_MESH: num_of_meshes += 1; break;
+    }
+  }
+
+  printf("Scene is composed of %u objects.\n"
+         " There are %u empties.\n"
+         " There are %u models.\n"
+         " There are %u meshes.\n",
+         importer->fbx->scene.num_of_objects,
+         num_of_empties,
+         num_of_models,
+         num_of_meshes);
+
+  printf("Hierarchy:\n");
+
+  walk_and_print(scene->root);
+  */
+
+  // 
+  // FBX
+  // 
+  ////////////////////////////////////////
+
 
   controls.mouseSensitivity = 0.01f;
 

@@ -733,6 +733,7 @@ static void *fbx__default_allocate_callback(fbx_size_t size,
   return _aligned_malloc(size, alignment);
 #else
   #if FBX_ON_POSIX
+  return aligned_alloc(alignment, size);
   #endif
 #endif
 }
@@ -918,31 +919,6 @@ typedef struct fbx_memory_stream {
   fbx_bool_t writeable;
 } fbx_memory_stream_t;
 
-extern const fbx_stream_dispatch_t fbx_memory_stream__dispatch;
-
-static fbx_stream_t *fbx_memory_stream_open(void *buffer,
-                                            fbx_size_t size,
-                                            const char *flags)
-{
-  fbx_memory_stream_t *stream =
-    (fbx_memory_stream_t *)FBX_ALLOCATE_TAGGED_S("stream", sizeof(fbx_memory_stream_t), 16);
-
-  stream->container.dispatch = &fbx_memory_stream__dispatch;
-
-  stream->buffer = (fbx_uint8_t *)buffer;
-  stream->size = size;
-  stream->cursor = 0;
-
-  while (const char flag = *flags++) {
-    switch (flag) {
-      case 'r': case 'R': stream->readable = FBX_TRUE; break;
-      case 'w': case 'W': stream->writeable = FBX_TRUE; break;
-    }
-  }
-
-  return &stream->container;
-}
-
 static void fbx_memory_stream_close(fbx_memory_stream_t *stream)
 {
   fbx_free((void *)stream);
@@ -1018,6 +994,29 @@ static const fbx_stream_dispatch_t fbx_memory_stream__dispatch = {
   (fbx_stream_close_callback_fn *)&fbx_memory_stream_close
 };
 
+static fbx_stream_t *fbx_memory_stream_open(void *buffer,
+                                            fbx_size_t size,
+                                            const char *flags)
+{
+  fbx_memory_stream_t *stream =
+    (fbx_memory_stream_t *)FBX_ALLOCATE_TAGGED_S("stream", sizeof(fbx_memory_stream_t), 16);
+
+  stream->container.dispatch = &fbx_memory_stream__dispatch;
+
+  stream->buffer = (fbx_uint8_t *)buffer;
+  stream->size = size;
+  stream->cursor = 0;
+
+  while (const char flag = *flags++) {
+    switch (flag) {
+      case 'r': case 'R': stream->readable = FBX_TRUE; break;
+      case 'w': case 'W': stream->writeable = FBX_TRUE; break;
+    }
+  }
+
+  return &stream->container;
+}
+
 #ifndef FBX_NO_STANDARD_LIBRARY
 
 typedef struct fbx_file_stream {
@@ -1025,22 +1024,6 @@ typedef struct fbx_file_stream {
   FILE *handle;
   fbx_bool_t owner;
 } fbx_file_stream_t;
-
-extern const fbx_stream_dispatch_t fbx_file_stream__dispatch;
-
-fbx_stream_t *fbx_file_stream_open(FILE *handle,
-                                   fbx_bool_t owner)
-{
-  fbx_file_stream_t *stream =
-    (fbx_file_stream_t *)FBX_ALLOCATE_TAGGED_S("stream", sizeof(fbx_file_stream_t), 1);
-
-  stream->container.dispatch = &fbx_file_stream__dispatch;
-
-  stream->handle = handle;
-  stream->owner = owner;
-
-  return &stream->container;
-}
 
 void fbx_file_stream_close(fbx_file_stream *stream)
 {
@@ -1095,6 +1078,20 @@ static const fbx_stream_dispatch_t fbx_file_stream__dispatch = {
   (fbx_stream_exhausted_callback_fn *)&fbx_file_stream_exhausted,
   (fbx_stream_close_callback_fn *)&fbx_file_stream_close
 };
+
+fbx_stream_t *fbx_file_stream_open(FILE *handle,
+                                   fbx_bool_t owner)
+{
+  fbx_file_stream_t *stream =
+    (fbx_file_stream_t *)FBX_ALLOCATE_TAGGED_S("stream", sizeof(fbx_file_stream_t), 1);
+
+  stream->container.dispatch = &fbx_file_stream__dispatch;
+
+  stream->handle = handle;
+  stream->owner = owner;
+
+  return &stream->container;
+}
 
 #endif
 
