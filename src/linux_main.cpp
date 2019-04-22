@@ -377,8 +377,6 @@ main(int argc, char *argv[])
   printf("Exported by \"%s\".\n",
          importer->fbx->exporter.name);
 
-  /*
-
   printf("Up = <%1.0f, %1.0f, %1.0f>\n"
          "Forward = <%1.0f, %1.0f, %1.0f>\n"
          "Right = <%1.0f, %1.0f, %1.0f>\n",
@@ -412,7 +410,6 @@ main(int argc, char *argv[])
   printf("Hierarchy:\n");
 
   walk_and_print(scene->root);
-  */
 
   // 
   // FBX
