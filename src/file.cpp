@@ -41,12 +41,13 @@ LoadEntireFileToMemory(char* fileName, AssetTable* assetTable, uint32* size)
   return storagePointer;
 }
 
-internal void
-ListDirectory(char* inPath, char* outFilesList)
+internal uint32
+ListDirectory(char* inPath, char* outFilesList, char* filter)
 {
   DIR *dp;
   struct dirent *ep;     
   dp = opendir(inPath);
+  uint32 filesCount = 0;
 
   if (dp != NULL)
   {
@@ -62,11 +63,16 @@ ListDirectory(char* inPath, char* outFilesList)
       {
         continue;
       }
+      else if (strstr(ep->d_name, filter) == NULL)
+      {
+        continue;
+      }
       else
       {
         memcpy(copyDestination, ep->d_name, strlen(ep->d_name));
         memset(copyDestination + strlen(ep->d_name), 0, 1);
         copyDestination += (strlen(ep->d_name) + 1);
+        filesCount++;
       }
     }
     (void)closedir(dp);
@@ -75,4 +81,6 @@ ListDirectory(char* inPath, char* outFilesList)
   {
     perror ("Couldn't open the directory");
   }
+
+  return filesCount;
 }
