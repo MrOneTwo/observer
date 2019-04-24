@@ -17,6 +17,9 @@
 #define FBX_IMPLEMENTATION
 #include "fbx.h"
 
+#include "meow_intrinsics.h"
+#include "meow_hash.h"
+
 #include "shaders.h"
 
 #include "base.h"
@@ -332,6 +335,14 @@ main(int argc, char *argv[])
     strncpy(fbxFiles[i] + strlen("./resources/"), cursor, 256);
     cursor += strlen(cursor) + 1;
   }
+
+  // Read 1 MB to compute the hash.
+  FILE* fbxFile = fopen(fbxFiles[0], "r");
+  fread(mem.transientMemory, 1, Megabytes(1), fbxFile);
+  fclose(fbxFile);
+
+  meow_hash mHash = MeowHash_Accelerated(0, Megabytes(1), mem.transientMemory);
+  printf(" [I] Meowhash result: %llx-%llx\n", mHash[0], mHash[1]);
 
   fbx_import_options_t options;
 
