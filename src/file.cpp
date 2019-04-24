@@ -41,6 +41,7 @@ LoadEntireFileToMemory(char* fileName, AssetTable* assetTable, uint32* size)
   return storagePointer;
 }
 
+// TODO(mc): port ListDirectory to SDL...?
 internal uint32
 ListDirectory(char* inPath, char* outFilesList, char* filter)
 {
@@ -79,7 +80,7 @@ ListDirectory(char* inPath, char* outFilesList, char* filter)
   }
   else
   {
-    perror ("Couldn't open the directory");
+    fprintf(stderr, " [E] Couldn't open the directory");
   }
 
   return filesCount;

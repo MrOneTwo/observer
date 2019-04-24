@@ -238,18 +238,6 @@ main(int argc, char *argv[])
   AssetTable assetTable = {};
   assetTable.storageMemory = &mem;
 
-  uint32 fbxFilesCount = ListDirectory("./resources", (char*)(mem.transientMemory), ".fbx");
-
-  char fbxFiles[fbxFilesCount][256];
-  char* cursor = (char*)mem.transientMemory;
-
-  for (uint32 i = 0; i < fbxFilesCount; ++i)
-  {
-    memcpy(fbxFiles[i], "./resources/", strlen("./resources/"));
-    strncpy(fbxFiles[i] + strlen("./resources/"), cursor, 256);
-    cursor += strlen(cursor) + 1;
-  }
-
   LoadAsset("./resources/cube.obj", &assetTable, ASSET_MODEL3D_OBJ);
   Model3D modelOBJ = {};
   RetriveOBJ(0, &assetTable, &modelOBJ);
@@ -333,6 +321,18 @@ main(int argc, char *argv[])
   // FBX
   // 
 
+  uint32 fbxFilesCount = ListDirectory("./resources", (char*)(mem.transientMemory), ".fbx");
+
+  char fbxFiles[fbxFilesCount][256];
+  char* cursor = (char*)mem.transientMemory;
+
+  for (uint32 i = 0; i < fbxFilesCount; ++i)
+  {
+    memcpy(fbxFiles[i], "./resources/", strlen("./resources/"));
+    strncpy(fbxFiles[i] + strlen("./resources/"), cursor, 256);
+    cursor += strlen(cursor) + 1;
+  }
+
   fbx_import_options_t options;
 
   options.permanent_memory_pool = Megabytes(2);
@@ -342,18 +342,18 @@ main(int argc, char *argv[])
   static const char* fbx_path = fbxFiles[0];
   fbx_importer_t *importer = fbx_importer_setup(&options);
 
-  importer->stream = fbx_stream_open_from_path(fbx_path, "r");
+  importer->stream = fbx_stream_open_from_path(fbxFiles[0], "r");
 
   if (!importer->stream) {
-    fprintf(stderr, "Cannot open \"%s\"!\n", fbx_path);
+    fprintf(stderr, " [E] Cannot open \"%s\"!\n", fbx_path);
     return EXIT_FAILURE;
   }
 
-  printf("Loading \"%s\"... ", fbx_path);
+  printf(" [I] Loading \"%s\"... ", fbx_path);
 
   if (fbx_importer_run(importer) != FBX_OK)
   {
-    fprintf(stderr, "\nFailed to load: %s\n", fbx_path);
+    fprintf(stderr, "\n [E] Failed to load: %s\n", fbx_path);
   }
   else
   {
