@@ -121,51 +121,6 @@ SignalHandler(int signal)
 global_variable GLAtom glAtom = {};
 
 void
-SetGeoForRendering(GLAtom* glAtom, Model3D* model)
-{
-  glGenVertexArrays(
-    1,       // vertex array object names count to generate
-    &glAtom->vao// array of object names
-  );
-  glBindVertexArray(glAtom->vao);
-
-  glGenBuffers(
-    1,                        // buffer object names count to generate
-    &glAtom->vboVertices      // array of object names
-  );
-  glBindBuffer(GL_ARRAY_BUFFER,
-               glAtom->vboVertices);
-  glBufferData(GL_ARRAY_BUFFER,
-               model->verticesSize,
-               (GLvoid*)model->vertices,
-               GL_STATIC_DRAW);
-
-  /*
-  glGenBuffers(
-    1,                              // buffer object names count to generate
-    &glAtom->vboVerticesColors      // array of object names
-  );
-  glBindBuffer(GL_ARRAY_BUFFER,
-               glAtom->vboVerticesColors);
-  glBufferData(GL_ARRAY_BUFFER,
-               model->colorsSize,
-               (GLvoid*)model->colors,
-               GL_STATIC_DRAW);
-               */
-
-  glGenBuffers(
-    1,
-    &glAtom->eboIndices
-  );
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
-               glAtom->eboIndices);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               model->indicesSize,
-               (GLvoid*)model->indices,
-               GL_STATIC_DRAW);
-}
-
-void
 UpdateViewMatrix(Camera* cam, mat4 view)
 {
   vec3 trgt = {0.0f, 0.0f, 0.0f};
@@ -409,7 +364,6 @@ main(int argc, char *argv[])
   // 
   ////////////////////////////////////////
 
-
   controls.mouseSensitivity = 0.01f;
 
   // model matrix holds, translation, scaling, rotation
@@ -445,59 +399,6 @@ main(int argc, char *argv[])
     CUSTOM_3D_SPACE_MAX_Z,
     projection);
 
-
-  SetGeoForRendering(&glAtom, &modelOBJ);
-  GLuint vertexShader;
-  GLuint fragmentShader;
-  CompileShader(VS_default, FS_default, &vertexShader, &fragmentShader);
-  GLuint shaderProgram = SetShader(vertexShader, fragmentShader);
-
-  GLint modelLoc = GetUniformLoc(shaderProgram, "model");
-  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model);
-
-  GLint viewLoc = GetUniformLoc(shaderProgram, "view");
-  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
-
-  GLint projectionLoc = GetUniformLoc(shaderProgram, "projection");
-  glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *)projection);
-
-  /*
-   * Linking vertex buffer with the attribute (saved in VAO).
-   */
-  glBindVertexArray(glAtom.vao);
-
-  glBindBuffer(GL_ARRAY_BUFFER, glAtom.vboVertices);
-
-  GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
-  glEnableVertexAttribArray(posAttrib);
-  glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                        3*sizeof(float), (void*)0);
-
-  /*
-  glBindBuffer(GL_ARRAY_BUFFER, glAtom.vboVerticesColors);
-
-  GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
-  glEnableVertexAttribArray(colorAttrib);
-  glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                        3*sizeof(float), (void*)0);
-                        */
-
-  glBindBuffer(GL_ARRAY_BUFFER, glAtom.vboVerticesUVs);
-
-  GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
-  glEnableVertexAttribArray(uvsAttrib);
-  glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                        2*sizeof(float), (void*)0);
-
-  // Unbinding to be sure it's a clean slate before actual loop.
-  // Doing that mostly to understand what's going on.
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
-
-
-
   // 
   // Set things UP.
   // 
@@ -506,10 +407,8 @@ main(int argc, char *argv[])
   // Prepare and LOOP.
   // 
 
-
   uint8 framerateTarget = 60;
   float frametimeTarget = 1.0f/frametimeTarget;
-
 
   WindowParams windowParameters = {};
   windowParameters.width = INIT_WINDOW_WIDTH;
@@ -520,11 +419,10 @@ main(int argc, char *argv[])
   appState.running = true;
   SDL_Event event;
 
-  int m = 0;
+  int wireframeToggler = 0;
 
   uint64 lastCounter = SDL_GetPerformanceCounter();
   uint64 lastCycleCount = _rdtsc();
-
 
   while (appState.running) {
     nk_input_begin(nkCtx);
@@ -552,16 +450,10 @@ main(int argc, char *argv[])
               appState.drawGUI = !appState.drawGUI;
             } break;
 
-            case SDLK_r: {
-              glClearColor(1.0, 0.0, 0.0, 1.0);
-              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-              SDL_GL_SwapWindow(window);
-            } break;
-
             case SDLK_t: {
               glClearColor(0.0, 0.0, 0.0, 1.0);
               glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-              appState.drawMode = ((m++)%2) ? GL_FILL : GL_LINE;
+              appState.drawMode = ((wireframeToggler++)%2) ? GL_FILL : GL_LINE;
               glPolygonMode(GL_FRONT_AND_BACK, appState.drawMode);
               glDrawElements( GL_TRIANGLES, modelOBJ.verticesCount, GL_UNSIGNED_INT, 0);
               SDL_GL_SwapWindow(window);
@@ -614,19 +506,7 @@ main(int argc, char *argv[])
     // Input
     // 
 
-    SDL_GetMouseState((int*)&(controls.mouseX),
-                      (int*)&(controls.mouseY));
-    if (controls.lmbState)
-    {
-      camera.yaw += controls.mouseSensitivity * (controls.mouseX - controlsPrev.mouseX);
-      camera.pitch += controls.mouseSensitivity * (controls.mouseY - controlsPrev.mouseY);
-      UpdateViewMatrix(&camera, view);
-      GLint viewLoc = GetUniformLoc(shaderProgram, "view");
-      glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
-    };
-
     controlsPrev = controls;
-
 
     ////////////////////////////////////////
     // 
@@ -657,38 +537,8 @@ main(int argc, char *argv[])
                       );
     glViewport(0, 0, windowParameters.width, windowParameters.height);
 
-    glClearColor(0.0, 0.0, 0.4, 1.0);
+    glClearColor(0.1, 0.1, 0.1, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBindVertexArray(glAtom.vao);
-    glBindTexture(GL_TEXTURE_2D, glAtom.texture);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glAtom.eboIndices);
-
-    glBindBuffer(GL_ARRAY_BUFFER, glAtom.vboVertices);
-
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                          3*sizeof(float), (void*)0);
-
-    /*
-    glBindBuffer(GL_ARRAY_BUFFER, glAtom.vboVerticesColors);
-
-    GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
-    glEnableVertexAttribArray(colorAttrib);
-    glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                          3*sizeof(float), (void*)0);
-                          */
-
-    glBindBuffer(GL_ARRAY_BUFFER, glAtom.vboVerticesUVs);
-
-    GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
-    glEnableVertexAttribArray(uvsAttrib);
-    glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                          2*sizeof(float), (void*)0);
-
-    glUseProgram(shaderProgram);
-    glDrawElements(GL_TRIANGLES, modelOBJ.verticesCount, GL_UNSIGNED_INT, 0);
 
     // check NK_API int nk_window_is_closed(struct nk_context*, const char*);
     if (appState.drawGUI)
