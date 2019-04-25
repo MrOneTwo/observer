@@ -279,11 +279,21 @@ main(int argc, char *argv[])
   // FBX
   // 
 
+  ListDirectoryParams filesListParams = {};
+  memcpy(filesListParams.path, "./resources\0", strlen("./resources\0"));
+  filesListParams.filesList = (char*)(mem.transientMemory);
+  memcpy(filesListParams.filter, ".fbx\0", strlen(".fbx\0"));
+  filesListParams.filesCount = 0;
+
   bool32 refreshFilesListPeriodically = true;
 
-  uint32 fbxFilesCount = ListDirectory("./resources", (char*)(mem.transientMemory), ".fbx");
+  uint32 fbxFilesCount = ListDirectory(filesListParams.path,
+                                       (char*)(mem.transientMemory),
+                                       filesListParams.filter);
+  filesListParams.filesCount = fbxFilesCount;
 
-  char fbxFiles[fbxFilesCount][256];
+  // TODO(michalc): this can't be just 8
+  char fbxFiles[8][256];
   char* cursor = (char*)mem.transientMemory;
 
   for (uint32 i = 0; i < fbxFilesCount; ++i)
@@ -510,14 +520,30 @@ main(int argc, char *argv[])
 
     controlsPrev = controls;
 
-    ListDirectoryParams filesListParams = {};
-    memcpy(filesListParams.path, "./resources\0", strlen("./resources\0"));
-    filesListParams.filesList = (char*)(mem.transientMemory);
-    memcpy(filesListParams.filter, ".fbx\0", strlen(".fbx\0"));
     if (refreshFilesListPeriodically)
     {
       SDL_TimerID timerIDFilesListRefresh = SDL_AddTimer(1000, ListDirectoryOnTimer, (ListDirectoryParams*)(&filesListParams));
       refreshFilesListPeriodically = false;
+    }
+
+    fbxFilesCount = filesListParams.filesCount;
+
+    // TODO(michalc): there is garbage in transientMemory at this point so you
+    // can't expect a proper file list till the first timer fire.
+    // Even though ListDirectory already filled in the files list at the beginning.
+    // In the meantime transientMemory gets used for something else I guess.
+    cursor = (char*)mem.transientMemory;
+
+    for (uint32 i = 0; i < fbxFilesCount; ++i)
+    {
+      memcpy(fbxFiles[i], "./resources/", strlen("./resources/"));
+      strncpy(fbxFiles[i] + strlen("./resources/"), cursor, 256);
+      cursor += strlen(cursor) + 1;
+    }
+
+    for (uint32 i = 0; i < fbxFilesCount; ++i)
+    {
+      printf(" --- %s\n", fbxFiles[i]);
     }
 
     ////////////////////////////////////////
