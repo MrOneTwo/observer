@@ -279,6 +279,8 @@ main(int argc, char *argv[])
   // FBX
   // 
 
+  bool32 refreshFilesListPeriodically = true;
+
   uint32 fbxFilesCount = ListDirectory("./resources", (char*)(mem.transientMemory), ".fbx");
 
   char fbxFiles[fbxFilesCount][256];
@@ -507,6 +509,16 @@ main(int argc, char *argv[])
     // 
 
     controlsPrev = controls;
+
+    ListDirectoryParams filesListParams = {};
+    memcpy(filesListParams.path, "./resources\0", strlen("./resources\0"));
+    filesListParams.filesList = (char*)(mem.transientMemory);
+    memcpy(filesListParams.filter, ".fbx\0", strlen(".fbx\0"));
+    if (refreshFilesListPeriodically)
+    {
+      SDL_TimerID timerIDFilesListRefresh = SDL_AddTimer(1000, ListDirectoryOnTimer, (ListDirectoryParams*)(&filesListParams));
+      refreshFilesListPeriodically = false;
+    }
 
     ////////////////////////////////////////
     // 

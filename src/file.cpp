@@ -41,6 +41,12 @@ LoadEntireFileToMemory(char* fileName, AssetTable* assetTable, uint32* size)
   return storagePointer;
 }
 
+typedef struct ListDirectoryParams {
+  char path[256];
+  char* filesList;
+  char filter[64];
+} ListDirectoryParams;
+
 // TODO(mc): port ListDirectory to SDL...?
 internal uint32
 ListDirectory(char* inPath, char* outFilesList, char* filter)
@@ -72,6 +78,7 @@ ListDirectory(char* inPath, char* outFilesList, char* filter)
       {
         memcpy(copyDestination, ep->d_name, strlen(ep->d_name));
         memset(copyDestination + strlen(ep->d_name), 0, 1);
+        printf(" Path: %s, Filter: %s, File: %s\n", inPath, filter, copyDestination);
         copyDestination += (strlen(ep->d_name) + 1);
         filesCount++;
       }
@@ -84,4 +91,12 @@ ListDirectory(char* inPath, char* outFilesList, char* filter)
   }
 
   return filesCount;
+}
+
+internal uint32
+ListDirectoryOnTimer(uint32 interval, void* params)
+{
+  ListDirectoryParams* _params = (ListDirectoryParams*)params;
+  ListDirectory(_params->path, _params->filesList, _params->filter);
+  return interval;
 }
