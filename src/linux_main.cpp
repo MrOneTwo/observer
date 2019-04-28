@@ -4,12 +4,14 @@
 
 #include <GL/glew.h>
 
+#define HAVE_M_PI  // SDL_stdinc.h has M_PI and it collides with Windows M_PI
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
 
 #include <signal.h>
 #include <math.h>
-#include <x86intrin.h>
+//#include <x86intrin.h>
+#include <intrin.h>
 #include <dirent.h>
 
 #include "cglm/cglm.h"
@@ -55,7 +57,6 @@
 #define NK_MAX_VERTEX_MEMORY    512 * 1024
 #define NK_MAX_ELEMENT_MEMORY   128 * 1024
 
-#define M_PI 3.14159265358979323846
 
 typedef struct Camera
 {
@@ -112,7 +113,7 @@ void
 SignalHandler(int signal)
 {
   if (signal == SIGINT || SIGTERM) {
-    SDL_Log("Received signal %d", signal); 
+    SDL_Log("Received signal %d", signal);
     exit(EXIT_SUCCESS);
   }
 }
@@ -275,9 +276,9 @@ main(int argc, char *argv[])
   nk_sdl_font_stash_end();
 
   ////////////////////////////////////////
-  // 
+  //
   // FBX
-  // 
+  //
 
   ListDirectoryParams filesListParams = {};
   memcpy(filesListParams.path, "./resources\0", strlen("./resources\0"));
@@ -309,7 +310,7 @@ main(int argc, char *argv[])
   fclose(fbxFile);
 
   meow_hash mHash = MeowHash_Accelerated(0, Megabytes(1), mem.transientMemory);
-  printf(" [I] Meowhash result: %llx-%llx\n", mHash[0], mHash[1]);
+  //printf(" [I] Meowhash result: %llx-%llx\n", mHash[0], mHash[1]);
 
   fbx_import_options_t options;
 
@@ -371,9 +372,9 @@ main(int argc, char *argv[])
 
   walk_and_print(scene->root);
 
-  // 
+  //
   // FBX
-  // 
+  //
   ////////////////////////////////////////
 
   controls.mouseSensitivity = 0.01f;
@@ -411,13 +412,13 @@ main(int argc, char *argv[])
     CUSTOM_3D_SPACE_MAX_Z,
     projection);
 
-  // 
+  //
   // Set things UP.
-  // 
+  //
   ////////////////////////////////////////
-  // 
+  //
   // Prepare and LOOP.
-  // 
+  //
 
   uint8 framerateTarget = 60;
   float frametimeTarget = 1.0f/frametimeTarget;
@@ -434,7 +435,7 @@ main(int argc, char *argv[])
   int wireframeToggler = 0;
 
   uint64 lastCounter = SDL_GetPerformanceCounter();
-  uint64 lastCycleCount = _rdtsc();
+  uint64 lastCycleCount = __rdtsc();
 
   while (appState.running) {
     nk_input_begin(nkCtx);
@@ -514,9 +515,9 @@ main(int argc, char *argv[])
 
 
     ////////////////////////////////////////
-    // 
+    //
     // Input
-    // 
+    //
 
     controlsPrev = controls;
 
@@ -547,9 +548,9 @@ main(int argc, char *argv[])
     }
 
     ////////////////////////////////////////
-    // 
+    //
     // Timing
-    // 
+    //
 
     // TODO(mc): think which real64 can be changed to real32
     uint64 endCounter = SDL_GetPerformanceCounter();
@@ -559,14 +560,14 @@ main(int argc, char *argv[])
     real64 fps = (real64)perfCountFrequency / (real64)counterElapsed;
     lastCounter = endCounter;
 
-    uint64 endCycleCount = _rdtsc();
+    uint64 endCycleCount = __rdtsc();
     uint64 cyclesElapsed = endCycleCount - lastCycleCount;
     real64 mcpf = ((real64)cyclesElapsed); // / (1000.0f * 1000.0f));
     lastCycleCount = endCycleCount;
 
 
     ////////////////////////////////////////
-    // 
+    //
     // Render
 
     SDL_GetWindowSize(window,
@@ -669,7 +670,7 @@ main(int argc, char *argv[])
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glDeleteBuffers(1, &glAtom.vboVertices);
   glDeleteBuffers(1, &glAtom.eboIndices);
-  
+
   SDL_Quit();
   return 0;
 }
