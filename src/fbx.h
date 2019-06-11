@@ -214,7 +214,7 @@ typedef enum fbx_status {
  */
 
 /* This library will panic if something goes horribly wrong. This will seldom
-   happen but you should still install a handler as it will allow you to get 
+   happen but you should still install a handler as it will allow you to get
    some information about what went wrong. */
 
 typedef struct fbx_panic_info {
@@ -463,7 +463,7 @@ typedef struct fbx_transform fbx_transform_t;
 typedef struct fbx_transform {
   /* Position relative to parent. */
   fbx_vec3_t position;
-  
+
   /* Rotation relative to parent. */
   fbx_quaternion_t rotation;
 
@@ -1312,16 +1312,16 @@ fbx_bool_t fbx_stream_read_uint64_as_uint32(fbx_stream_t *stream, fbx_uint32_t *
     return FBX_FALSE;                                     \
   }
 
-/*                                              
- *  _____                               _         
- * |     |___ _____ ___ ___ ___ ___ ___|_|___ ___ 
+/*
+ *  _____                               _
+ * |     |___ _____ ___ ___ ___ ___ ___|_|___ ___
  * |   --| . |     | . |  _| -_|_ -|_ -| | . |   |
  * |_____|___|_|_|_|  _|_| |___|___|___|_|___|_|_|
- *                 |_|                            
+ *                 |_|
  */
 
 #ifdef FBX_USE_EXTERNAL_COMPRESSION
-  
+
 #ifndef fbx__zlib_inflate
   #error ("You must define `fbx__zlib_inflate` if using an external compression library!")
 #endif
@@ -1344,7 +1344,7 @@ fbx_uint32_t fbx__zlib_adler32(const void *data, fbx_size_t length)
   while (length > 0) {
     /* We can defer modulo for quite a while. See Wikipedia. */
     fbx_uint32_t k = (length < 5552) ? length : 5552;
-    
+
     /* Unrolled summation. */
     for (fbx_size_t i = k / 16; i; --i, D += 16) {
       s1 += D[0];  s2 += s1; s1 += D[1];  s2 += s1;
@@ -1395,9 +1395,9 @@ static void fbx__zlib_build_fixed_huffman_trees(fbx__zlib_huffman_t *l_tree,
   /* Build distance tree. */
 
   for (unsigned i = 0; i < 5; ++i) d_tree->counts[i] = 0;
-  
+
   d_tree->counts[5] = 32;
-  
+
   for (unsigned i = 0; i < 32; ++i) d_tree->code_to_symbol[i] = i;
 }
 
@@ -1479,10 +1479,10 @@ static unsigned fbx__zlib_inflate_get_bits(fbx__zlib_inflater_t *I,
                                            fbx_size_t n)
 {
   unsigned v = 0;
-  
+
   for (unsigned mask = 1, limit = 1 << n; mask < limit; mask <<= 1)
     v += fbx__zlib_inflate_get_next_bit(I) ? mask : 0;
-  
+
   return v;
 }
 
@@ -1515,7 +1515,7 @@ static void fbx__zlib_inflate_repeat(fbx__zlib_inflater_t *I, unsigned length, u
 static void fbx__zlib_inflate_uncompressed_block(fbx__zlib_inflater_t *I)
 {
   fbx_uint16_t length, complement;
- 
+
   /* Read length of block and its one's complement, making sure to skip any
      remaining bits to align to a byte boundary. */
   length = fbx__zlib_inflate_get_next_byte(I) | 256 * fbx__zlib_inflate_get_next_byte(I);
@@ -1739,7 +1739,7 @@ static int fbx__zlib_inflate(const void *in, fbx_size_t in_sz,
     if (b_final)
       /* Final block, fall through to check checksum. */
       break;
-    
+
   #if FBX__ZLIB_SAFE
     if (!I.left)
       /* Ran out of data before final block. */
@@ -1834,7 +1834,7 @@ typedef struct fbx_data_t {
 
   /* Number of elements in array. */
   fbx_uint32_t count;
-  
+
   union {
     /* Untyped pointer to elements. */
     const void *elements;
@@ -1880,7 +1880,7 @@ static fbx_bool_t fbx_extract_an_array(const void *cursor,
                                        const void **updated)
 {
   /* Read in number of elements in array. */
-  const fbx_uint32_t count = *(fbx_uint32_t *)cursor; 
+  const fbx_uint32_t count = *(fbx_uint32_t *)cursor;
   cursor = BUMP(cursor, 4);
 
   /* Identify encoding. */
@@ -2321,7 +2321,13 @@ static void *fbx_importer_transient_alloc(fbx_importer_t *importer,
                                           fbx_size_t size)
 {
   if (void *ptr = fbx_block_allocate(&importer->memory.transient, size))
+  {
     return ptr;
+  }
+  else
+  {
+    return NULL;
+  }
 
   fbx_importer_error(importer, FBX_EMEMORY, "Exhausted transient memory pool!");
 }
@@ -2330,7 +2336,13 @@ static void *fbx_importer_permanent_alloc(fbx_importer_t *importer,
                                           fbx_size_t size)
 {
   if (void *ptr = fbx_block_allocate(&importer->memory.permanent, size))
+  {
     return ptr;
+  }
+  else
+  {
+    return NULL;
+  }
 
   fbx_importer_error(importer, FBX_EMEMORY, "Exhausted permanent memory pool!");
 }
@@ -2341,18 +2353,18 @@ static const char *fbx_importer_intern_a_string(fbx_importer_t *importer,
 {
   if (length == 0)
     /* Empty string optimization. */
-    return importer->an_empty_string;    
-    
+    return importer->an_empty_string;
+
   char *storage = (char *)fbx_block_allocate(&importer->memory.strings, length + 1);
 
   if (!storage)
     fbx_importer_error(importer, FBX_EMEMORY, "Exhausted string pool!");
 
   fbx_copy(string, storage, length);
-  
+
   /* Null-terminate because it's never done for us. Autodesk man... */
   storage[length] = '\0';
-  
+
   return storage;
 }
 
@@ -3164,7 +3176,7 @@ static void *fbx_reify_a_model(fbx_importer_t *importer,
   fbx_property_or_default_by_name_s(base, node, "TranslationActive", translation_active_property);
   fbx_property_or_default_by_name_s(base, node, "RotationActive", rotation_active_property);
   fbx_property_or_default_by_name_s(base, node, "ScalingActive", scaling_active_property);
-  
+
   fbx_property_is_type_s(FBX_BOOLEAN_PROPERTY, translation_active_property);
   fbx_property_is_type_s(FBX_BOOLEAN_PROPERTY, rotation_active_property);
   fbx_property_is_type_s(FBX_BOOLEAN_PROPERTY, scaling_active_property);
@@ -3208,7 +3220,7 @@ static void *fbx_reify_a_model(fbx_importer_t *importer,
       /* TODO(mtwilliams): Handle spheric rotation? */
       fbx_importer_error(importer, FBX_EFEATURE, "Unsupported rotation order.");
 
-    fbx_quaternion_t rotation = 
+    fbx_quaternion_t rotation =
       rotation_from_order_and_angles(order_of_rotation,
                                      local_rotation_property->value.as_a_vector);
 
@@ -3233,13 +3245,13 @@ static void *fbx_reify_a_model(fbx_importer_t *importer,
 
     // pre_rotation * rotation * inverse(post_rotation)
     model->transform.rotation = rotation;
-  
+
     const fbx_property_t *rotation_pivot_property,
                          *rotation_offset_property;
 
     fbx_property_or_default_by_name_s(base, node, "RotationPivot", rotation_pivot_property);
     fbx_property_or_default_by_name_s(base, node, "RotationOffset", rotation_offset_property);
-    
+
     fbx_property_is_type_s(FBX_VECTOR_PROPERTY, rotation_pivot_property);
     fbx_property_is_type_s(FBX_VECTOR_PROPERTY, rotation_offset_property);
 
@@ -3262,7 +3274,7 @@ static void *fbx_reify_a_model(fbx_importer_t *importer,
 
     fbx_property_or_default_by_name_s(base, node, "ScalingPivot", scaling_pivot_property);
     fbx_property_or_default_by_name_s(base, node, "ScalingOffset", scaling_offset_property);
-    
+
     fbx_property_is_type_s(FBX_VECTOR_PROPERTY, scaling_pivot_property);
     fbx_property_is_type_s(FBX_VECTOR_PROPERTY, scaling_offset_property);
 
@@ -3363,7 +3375,7 @@ static void *fbx_reify_a_mesh(fbx_importer_t *importer,
 
   /* Copy coordinates to permanent memory, halving precision along the way. */
   for (fbx_uint32_t i = 0; i < vd.count; ++i)
-    positions[i] = fbx_real32_t(vd.ptr_to_real64[i]); 
+    positions[i] = fbx_real32_t(vd.ptr_to_real64[i]);
 
   /* Positions always occupy first stream. */
   streams[0] = (void *)positions;
@@ -3602,10 +3614,10 @@ static fbx_bool_t fbx_reify_applicable_objects_and_connections(fbx_importer_t *i
 
     switch (type) {
       case FBX_OBJECT_TO_OBJECT: {
-        fbx_object_t *parent = fbx_scene_object_by_id(&importer->fbx->scene, 
+        fbx_object_t *parent = fbx_scene_object_by_id(&importer->fbx->scene,
                                                       id_of_parent);
 
-        fbx_object_t *child = fbx_scene_object_by_id(&importer->fbx->scene, 
+        fbx_object_t *child = fbx_scene_object_by_id(&importer->fbx->scene,
                                                      id_of_child);
 
         fbx_connect_an_object_to_another_object(importer, parent, child);
@@ -3716,7 +3728,7 @@ static fbx_status_t fbx_importer_run(fbx_importer_t *importer)
   fbx_importer_process(importer);
 
   /* Free backing memory used to constitute the internal node hierarchy. */
-  
+
   /* Validate and clean up data. */
    /* Includes triangulation the like. */
 
