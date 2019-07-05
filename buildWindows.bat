@@ -19,6 +19,6 @@ rem /MTd whether a lib is static or dll and if production or debug.
 if "%1"=="debug" (
   rem Fill me in.
 ) else (
-  cl ..\src\linux_main.cpp /Zi /MT %warnFlags% %includeFlags% /link %libsFlags%
+  cl ..\src\main.cpp /Zi /MT %warnFlags% %includeFlags% /link %libsFlags%
 )
 popd
